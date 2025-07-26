@@ -1,61 +1,241 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏛️ Microservicio SAT - Sistema de Verificación Tributaria
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST para verificar el estado tributario de contribuyentes guatemaltecos mediante consulta al sistema de la Superintendencia de Administración Tributaria (SAT).
 
-## About Laravel
+## 📋 Tabla de Contenidos
+- [Descripción](#descripción)
+- [Tecnologías](#tecnologías)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Endpoints](#endpoints)
+- [Ejemplos de Uso](#ejemplos-de-uso)
+- [Base de Datos](#base-de-datos)
+- [Testing](#testing)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📖 Descripción
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Este microservicio permite verificar si un contribuyente tiene omisiones o multas tributarias pendientes en el sistema SAT. Se utiliza como parte de la arquitectura de microservicios para el control de acceso al sistema principal.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ Tecnologías
 
-## Learning Laravel
+- **Python 3.8+**
+- **Flask 2.3.3**
+- **Flask-CORS 4.0.0**
+- **MySQL Connector Python 8.2.0**
+- **MySQL 8.0+**
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Instalación
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Clonar el repositorio
+```bash
+git clone <tu-repositorio>
+cd microservicio-sat
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. Crear entorno virtual
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+```
 
-## Laravel Sponsors
+### 3. Instalar dependencias
+```bash
+pip install flask flask-cors mysql-connector-python
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 4. Configurar base de datos
+```sql
+CREATE DATABASE microservicio_sat;
+USE microservicio_sat;
 
-### Premium Partners
+CREATE TABLE IF NOT EXISTS contribuyentes_sat (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nit VARCHAR(25) NOT NULL UNIQUE,
+    email VARCHAR(120) NOT NULL UNIQUE,
+    nombre_completo VARCHAR(150),
+    estado_tributario ENUM('al_dia', 'con_omisiones', 'suspendido') DEFAULT 'al_dia',
+    fecha_ultimo_pago DATE,
+    monto_adeudado DECIMAL(10,2) DEFAULT 0.00,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## ⚙️ Configuración
 
-## Contributing
+Editar las credenciales de base de datos en `ms_sat.py`:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```python
+db_config = {
+    'host': 'localhost',
+    'port': 3306,
+    'user': 'root',
+    'password': 'tu_password',
+    'database': 'microservicio_sat'
+}
+```
 
-## Code of Conduct
+## 📡 Endpoints
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### **GET /verificar_sat**
 
-## Security Vulnerabilities
+Verifica el estado tributario de un contribuyente por NIT o email.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### Parámetros de consulta:
+- `nit` (string, opcional): NIT del contribuyente (formato: 12345678-9)
+- `email` (string, opcional): Email del contribuyente
 
-## License
+> **Nota:** Debe enviarse al menos uno de los dos parámetros.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### Respuestas:
+
+**✅ Éxito (200 OK)**
+```json
+{
+    "tiene_omisiones": false
+}
+```
+
+**❌ Usuario no encontrado (404 Not Found)**
+```json
+{
+    "error": "Usuario no encontrado"
+}
+```
+
+**❌ Parámetros faltantes (400 Bad Request)**
+```json
+{
+    "error": "Debe enviar nit o email"
+}
+```
+
+**❌ Error de base de datos (500 Internal Server Error)**
+```json
+{
+    "error": "Error en la base de datos: <detalle_del_error>"
+}
+```
+
+## 🧪 Ejemplos de Uso
+
+### **Consulta por NIT**
+
+**Request:**
+```http
+GET http://localhost:5003/verificar_sat?nit=12345678-9
+```
+
+**Response:**
+```json
+{
+    "tiene_omisiones": true
+}
+```
+
+### **Consulta por Email**
+
+**Request:**
+```http
+GET http://localhost:5003/verificar_sat?email=juan@example.com
+```
+
+**Response:**
+```json
+{
+    "tiene_omisiones": false
+}
+```
+
+### **Error - Parámetros faltantes**
+
+**Request:**
+```http
+GET http://localhost:5003/verificar_sat
+```
+
+**Response:**
+```json
+{
+    "error": "Debe enviar nit o email"
+}
+```
+
+## 💾 Base de Datos
+
+### Estructura de la tabla `contribuyentes_sat`:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | INT AUTO_INCREMENT | Identificador único |
+| `nit` | VARCHAR(25) UNIQUE | NIT del contribuyente |
+| `email` | VARCHAR(120) UNIQUE | Email del contribuyente |
+| `nombre_completo` | VARCHAR(150) | Nombre completo |
+| `estado_tributario` | ENUM | 'al_dia', 'con_omisiones', 'suspendido' |
+| `fecha_ultimo_pago` | DATE | Fecha del último pago |
+| `monto_adeudado` | DECIMAL(10,2) | Monto adeudado |
+| `fecha_registro` | TIMESTAMP | Fecha de registro |
+
+### Datos de prueba:
+
+```sql
+INSERT INTO contribuyentes_sat (nit, email, nombre_completo, estado_tributario, monto_adeudado) VALUES 
+('12345678-9', 'juan@example.com', 'Juan Carlos Pérez López', 'con_omisiones', 1250.75),
+('98765432-1', 'maria@example.com', 'María Elena González Ruiz', 'al_dia', 0.00),
+('11111111-1', 'carlos@example.com', 'Carlos Roberto López Martínez', 'al_dia', 0.00);
+```
+
+## 🧪 Testing
+
+### Usando cURL:
+
+```bash
+# Consulta por NIT
+curl "http://localhost:5003/verificar_sat?nit=12345678-9"
+
+# Consulta por email
+curl "http://localhost:5003/verificar_sat?email=maria@example.com"
+
+# Error de parámetros
+curl "http://localhost:5003/verificar_sat"
+```
+
+### Usando Postman:
+
+1. **Crear nueva request**
+2. **Método:** GET
+3. **URL:** `http://localhost:5003/verificar_sat`
+4. **Params:** Agregar `nit` o `email`
+5. **Send**
+
+### Ejecutar el microservicio:
+
+```bash
+python ms_sat.py
+```
+
+**Output esperado:**
+```
+ * Serving Flask app 'ms_sat'
+ * Debug mode: on
+ * Running on http://127.0.0.1:5003
+```
+
+## 🔧 Configuración de CORS
+
+El microservicio tiene CORS habilitado para permitir requests desde el frontend de Laravel:
+
+```python
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app)  # Permite requests desde cualquier origen
+```
+
+## 📞 Soporte
+
+Para reportar problemas o solicitar nuevas funcionalidades, contactar al equipo de desarrollo.
+
+---
+
+**Desarrollado para el Sistema de Verificación Tributaria con Microservicios**  
+*Universidad del Valle de Guatemala - Desarrollo Web 2*
