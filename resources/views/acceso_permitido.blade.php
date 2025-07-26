@@ -14,11 +14,27 @@
                 <!-- Contenido de bienvenida -->
                 <div class="flex-1">
                     <h1 class="text-xl font-semibold text-gray-900 mb-3">Bienvenido, {{ $usuario->name }}</h1>
-                    <p class="text-sm text-gray-700 mb-1"><strong>NIT:</strong> {{ $usuario->nit }}</p>
-                    <p class="text-sm text-gray-700">
-                        <strong>Tasa actual USD → GTQ:</strong> Q{{ $tasa['tasa'] }} 
-                        <span class="text-gray-500">({{ $tasa['fecha'] }})</span>
-                    </p>
+                    <p class="text-sm text-gray-700 mb-3"><strong>NIT:</strong> {{ $usuario->nit }}</p>
+                    <p class="text-sm text-gray-700 mb-2"><strong>Email:</strong> {{ $usuario->email }}</p>
+                    
+                    @if($tasa_cambio['disponible'])
+                        <div class="bg-gray-50 p-3 rounded-lg mt-4">
+                            <p class="text-sm text-gray-700">
+                                <strong>Tasa USD → GTQ:</strong> Q{{ $tasa_cambio['referencia'] }} 
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">Fecha: {{ $tasa_cambio['fecha'] }}</p>
+                        </div>
+                    @else
+                        <div class="bg-yellow-50 p-3 rounded-lg mt-4">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Tasa de cambio:</strong> No disponible en este momento
+                            </p>
+                        </div>
+                    @endif
+                    
+                    <div class="mt-4 text-xs text-green-600">
+                        ✅ Estado tributario: Al día
+                    </div>
                 </div>
             </div>
         </div>
