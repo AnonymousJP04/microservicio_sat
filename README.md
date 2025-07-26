@@ -231,11 +231,8 @@ app = Flask(__name__)
 CORS(app)  # Permite requests desde cualquier origen
 ```
 
-## 📞 Soporte
-
-Para reportar problemas o solicitar nuevas funcionalidades, contactar al equipo de desarrollo.
-
 ---
 
 **Desarrollado para el Sistema de Verificación Tributaria con Microservicios**  
-*Universidad del Valle de Guatemala - Desarrollo Web 2*
+*Universidad del Valle de Guatemala - Desarrollo Web 2*  
+*Impartido por el gran Ing. Samuel Molina*
